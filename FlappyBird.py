@@ -14,6 +14,9 @@ bg=pygame.image.load("Lesson 7/images/bg.png")
 ground=pygame.image.load("Lesson 7/images/ground.png")
 groundx=0
 
+flying=False
+gameover=False
+
 class Bird(pygame.sprite.Sprite):
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
@@ -27,14 +30,31 @@ class Bird(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = [x,y]
         self.counter=0
+        self.velocity=0
+        self.clicked=False
     def update(self):
-        self.counter+=1
-        if self.counter > 5:
-            self.index +=1
-            if self.index > 2:
-                self.index=0
-            self.image = self.images[self.index]
-            self.counter=0
+        global gameover, flying
+        if gameover == False:
+            self.counter+=1
+            if self.counter > 5:
+                self.index +=1
+                if self.index > 2:
+                    self.index=0
+                self.image = self.images[self.index]
+                self.counter=0
+        if flying == True and gameover==False:
+            self.velocity += 0.3
+            self.rect.y += self.velocity
+            if self.rect.y > 520:
+                self.rect.y = 520
+                gameover=True
+                flying=False
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                    self.velocity = -5
+                    self.clicked=True
+            if pygame.mouse.get_pressed()[0] == 0:
+                    self.clicked=False
+            self.image=pygame.transform.rotate(self.images[self.index],self.velocity*-4)
 
 birdgroup = pygame.sprite.Group()
 fb = Bird(100,250)
@@ -46,6 +66,8 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            flying=True
     screen.blit(bg,(0,0))
     screen.blit(ground,(groundx,550))
     groundx-=2   
