@@ -19,6 +19,7 @@ screen=pygame.display.set_mode((WIDTH,HEIGHT))
 bg=pygame.image.load("Lesson 7/images/bg.png")
 ground=pygame.image.load("Lesson 7/images/ground.png")
 groundx=0
+restart=pygame.image.load("Lesson 7/images/restart.png")
 
 flying=False
 gameover=False
@@ -48,17 +49,17 @@ class Bird(pygame.sprite.Sprite):
                     self.index=0
                 self.image = self.images[self.index]
                 self.counter=0
-        if flying == True and gameover==False:
+        if flying == True:
             self.velocity += 0.3
             self.rect.y += self.velocity
             if self.rect.y > 520:
                 self.rect.y = 520
                 gameover=True
                 flying=False
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False and gameover==False:
                     self.velocity = -5
                     self.clicked=True
-            if pygame.mouse.get_pressed()[0] == 0:
+            if pygame.mouse.get_pressed()[0] == 0 and gameover==False:
                     self.clicked=False
             self.image=pygame.transform.rotate(self.images[self.index],self.velocity*-4)
         if gameover==True:
@@ -74,6 +75,7 @@ class Pipe(pygame.sprite.Sprite):
             self.rect.bottomleft=[x,y]
         if position==-1:
             self.rect.topleft=[x,y]
+        self.passed = False
     def update(self):
         self.rect.x-=5
         if self.rect.right<0:
@@ -94,7 +96,7 @@ while run:
         if event.type == pygame.MOUSEBUTTONDOWN:
             flying=True
     screen.blit(bg,(0,0))
-    scoretxt=scorefont.render(str(score),True,"white")
+    scoretxt=scorefont.render(str(int(score)),True,"white")
     screen.blit(scoretxt,(400,50))
     pipegroup.draw(screen)
     if gameover==False:
@@ -112,6 +114,24 @@ while run:
             bp=Pipe(800,300+pipegap,-1)
             pipegroup.add(bp)
             last_pipe=time_now
+    if gameover==True:
+        restartbutton=restart.get_rect(center=(400,300))
+        screen.blit(restart,restartbutton)
+        if event.type==pygame.MOUSEBUTTONDOWN:
+            if restartbutton.collidepoint(pygame.mouse.get_pos()):
+                gameover=False
+                flying=False
+                pipegroup.empty()
+                fb.rect.center = [100,250]
+                fb.velocity=0
+                score=0
+    if pygame.sprite.groupcollide(birdgroup,pipegroup,False,False):
+        gameover=True
+    if gameover==False:
+        for pipe in pipegroup:
+            if birdgroup.sprites()[0].rect.left>pipe.rect.right and not pipe.passed:
+                pipe.passed=True
+                score+=0.5
     screen.blit(ground,(groundx,550))
     pipegroup.update()
     pygame.display.update()
